@@ -1,0 +1,304 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Checkpoint | Juegos para Steam</title>
+  <style>
+    :root {
+      --blue: #17365d;
+      --white: #ffffff;
+      font-family: Arial, sans-serif;
+      color: var(--blue);
+      background: var(--white);
+    }
+
+    * { box-sizing: border-box; }
+    body { margin: 0; }
+    button, input { font: inherit; }
+    button, a { color: inherit; }
+    button { cursor: pointer; }
+    .page { width: min(100% - 36px, 1000px); margin: 0 auto; }
+
+    header {
+      min-height: 76px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 20px;
+      border-radius: 0 0 10px 10px;
+      background: var(--blue);
+      color: var(--white);
+    }
+    .logo { margin: 0; font-size: 24px; letter-spacing: .3px; }
+    .cart-toggle, .category, .add-button, .remove-button {
+      border: 1px solid var(--blue);
+      border-radius: 6px;
+      background: var(--white);
+      color: var(--blue);
+    }
+    .cart-toggle { padding: 10px 15px; border-color: var(--white); }
+    .cart-toggle:hover, .category:hover, .category.active,
+    .add-button:hover, .remove-button:hover {
+      background: var(--blue);
+      color: var(--white);
+    }
+    .cart-toggle:hover { outline: 1px solid var(--white); }
+
+    main { padding: 34px 0 48px; }
+    h2 { margin: 0 0 8px; font-size: 28px; }
+    .intro { margin: 0 0 20px; }
+    .search {
+      width: 100%;
+      padding: 13px 15px;
+      border: 1px solid var(--blue);
+      border-radius: 7px;
+      color: var(--blue);
+      outline-color: var(--blue);
+    }
+    .categories { display: flex; flex-wrap: wrap; gap: 9px; margin: 16px 0 24px; }
+    .category { padding: 9px 15px; }
+
+    .products { display: grid; grid-template-columns: repeat(3, 1fr); gap: 18px; }
+    .product {
+      overflow: hidden;
+      border: 1px solid var(--blue);
+      border-radius: 9px;
+      background: var(--white);
+      transition: transform .18s ease, box-shadow .18s ease;
+    }
+    .product:hover { transform: translateY(-3px); box-shadow: 0 7px 16px #17365d33; }
+    .product-link { display: block; text-decoration: none; }
+    .product-link:hover h3 { text-decoration: underline; }
+    .product-image {
+      display: block;
+      width: 100%;
+      aspect-ratio: 2 / 1;
+      object-fit: cover;
+      border-bottom: 1px solid var(--blue);
+    }
+    .product-info { padding: 13px 14px 4px; }
+    .product-category { margin: 0 0 8px; font-size: 12px; text-transform: uppercase; }
+    .product h3 { margin: 0 0 8px; font-size: 18px; }
+    .product-price { margin: 0 0 10px; font-weight: bold; }
+    .product-bottom { display: flex; justify-content: flex-end; padding: 0 14px 14px; }
+    .add-button { padding: 9px 13px; }
+    .empty { grid-column: 1 / -1; padding: 20px 0; }
+
+    .cart {
+      display: none;
+      margin: 18px 0 0 auto;
+      padding: 18px;
+      border: 1px solid var(--blue);
+      border-radius: 8px;
+      background: var(--white);
+    }
+    .cart.open { display: block; }
+    .cart h2 { font-size: 20px; }
+    .cart-row { display: flex; justify-content: space-between; gap: 16px; padding: 11px 0; border-top: 1px solid var(--blue); }
+    .cart-total { display: flex; justify-content: space-between; padding-top: 13px; border-top: 2px solid var(--blue); font-weight: bold; }
+    .remove-button { margin-left: 8px; padding: 5px 8px; }
+    .cart-empty { margin: 14px 0; }
+
+    .detail { max-width: 760px; }
+    .back-link { display: inline-block; margin-bottom: 22px; }
+    .detail-image {
+      display: block;
+      width: 100%;
+      max-height: 390px;
+      margin-bottom: 20px;
+      border: 1px solid var(--blue);
+      border-radius: 9px;
+      object-fit: cover;
+    }
+    .detail-category { margin: 0 0 8px; text-transform: uppercase; }
+    .detail h2 { font-size: 32px; }
+    .detail-description { line-height: 1.6; }
+    .detail-price { margin-top: 22px; font-size: 22px; font-weight: bold; }
+    .detail-actions { display: flex; align-items: center; flex-wrap: wrap; gap: 12px; }
+    .detail-actions .add-button { padding: 11px 16px; }
+
+    @media (max-width: 700px) {
+      .products { grid-template-columns: repeat(2, 1fr); }
+    }
+    @media (max-width: 460px) {
+      .page { width: calc(100% - 24px); }
+      .products { grid-template-columns: 1fr; }
+      main { padding-top: 26px; }
+      header { padding: 0 12px; }
+    }
+  </style>
+</head>
+<body>
+  <header class="page">
+    <h1 class="logo">Checkpoint</h1>
+    <button class="cart-toggle" id="cart-toggle" type="button" aria-expanded="false">
+      Carrito (<span id="cart-count">0</span>)
+    </button>
+  </header>
+
+  <main class="page" id="store">
+    <h2>Juegos para Steam</h2>
+    <p class="intro">Busca un juego o explora por categoría.</p>
+    <input class="search" id="search" type="search" placeholder="Buscar juegos..." aria-label="Buscar juegos">
+
+    <nav class="categories" id="categories" aria-label="Categorías">
+      <button class="category active" type="button" data-category="Todos">Todos</button>
+      <button class="category" type="button" data-category="Acción">Acción</button>
+      <button class="category" type="button" data-category="Aventura">Aventura</button>
+      <button class="category" type="button" data-category="RPG">RPG</button>
+      <button class="category" type="button" data-category="Estrategia">Estrategia</button>
+      <button class="category" type="button" data-category="Indie">Indie</button>
+    </nav>
+
+    <section class="products" id="products" aria-label="Catálogo de juegos"></section>
+  </main>
+
+  <main class="page detail" id="detail" hidden>
+    <a class="back-link" href="index.html">← Volver a los juegos</a>
+    <img class="detail-image" id="detail-image" alt="">
+    <p class="detail-category" id="detail-category"></p>
+    <h2 id="detail-name"></h2>
+    <p class="detail-description" id="detail-description"></p>
+    <div class="detail-actions">
+      <p class="detail-price" id="detail-price"></p>
+      <button class="add-button" id="detail-add" type="button">Agregar al carrito</button>
+      <span id="detail-message" aria-live="polite"></span>
+    </div>
+  </main>
+
+  <section class="page cart" id="cart" aria-label="Carrito de compras" aria-live="polite"></section>
+
+  <script>
+    const games = [
+      { id: 1, appId: 367520, name: "Hollow Knight", category: "Aventura", price: 8.99, description: "Explora cavernas y ruinas en una aventura de acción dibujada a mano." },
+      { id: 2, appId: 1145360, name: "Hades", category: "Acción", price: 12.49, description: "Lucha para salir del inframundo en este juego de acción y mitología." },
+      { id: 3, appId: 1086940, name: "Baldur's Gate 3", category: "RPG", price: 44.99, description: "Vive una aventura de rol y toma decisiones que cambian tu historia." },
+      { id: 4, appId: 413150, name: "Stardew Valley", category: "Indie", price: 9.99, description: "Construye una granja, conoce a tus vecinos y descubre los secretos del valle." },
+      { id: 5, appId: 292030, name: "The Witcher 3", category: "RPG", price: 7.49, description: "Acompaña a Geralt en una aventura de fantasía en un mundo abierto." },
+      { id: 6, appId: 275850, name: "No Man's Sky", category: "Aventura", price: 23.99, description: "Explora planetas y sistemas en una aventura espacial." },
+      { id: 7, appId: 504230, name: "Celeste", category: "Indie", price: 4.99, description: "Ayuda a Madeline a subir la montaña Celeste en una aventura de plataformas." },
+      { id: 8, appId: 289070, name: "Civilization VI", category: "Estrategia", price: 5.99, description: "Crea y desarrolla una civilización a través de distintas épocas." }
+    ];
+
+    const cart = [];
+    let selectedCategory = "Todos";
+    const products = document.getElementById("products");
+    const cartElement = document.getElementById("cart");
+
+    function renderProducts() {
+      const search = document.getElementById("search").value.trim().toLowerCase();
+      const filtered = games.filter((game) =>
+        (selectedCategory === "Todos" || game.category === selectedCategory) &&
+        game.name.toLowerCase().includes(search)
+      );
+
+      products.innerHTML = filtered.length
+        ? filtered.map((game) => `
+          <article class="product">
+            <a class="product-link" href="index.html?juego=${game.id}" target="_blank" rel="noopener">
+              <img class="product-image" src="https://cdn.akamai.steamstatic.com/steam/apps/${game.appId}/header.jpg" alt="Portada de ${game.name}" loading="lazy">
+              <div class="product-info">
+                <p class="product-category">${game.category}</p>
+                <h3>${game.name}</h3>
+                <p class="product-price">$${game.price.toFixed(2)}</p>
+              </div>
+            </a>
+            <div class="product-bottom">
+              <button class="add-button" type="button" data-add="${game.id}">Agregar al carrito</button>
+            </div>
+          </article>
+        `).join("")
+        : '<p class="empty">No se encontraron juegos.</p>';
+    }
+
+    function renderCart() {
+      const count = cart.reduce((sum, item) => sum + item.quantity, 0);
+      const total = cart.reduce((sum, item) => sum + item.price * item.quantity, 0);
+      document.getElementById("cart-count").textContent = count;
+
+      cartElement.innerHTML = cart.length
+        ? `<h2>Tu carrito</h2>
+          ${cart.map((item) => `
+            <div class="cart-row">
+              <span>${item.name} × ${item.quantity}</span>
+              <span>$${(item.price * item.quantity).toFixed(2)}
+                <button class="remove-button" type="button" data-remove="${item.id}">Quitar</button>
+              </span>
+            </div>
+          `).join("")}
+          <div class="cart-total"><span>Total</span><span>$${total.toFixed(2)}</span></div>`
+        : "<h2>Tu carrito</h2><p class=\"cart-empty\">El carrito está vacío.</p>";
+    }
+
+    function addToCart(game) {
+      const item = cart.find((entry) => entry.id === game.id);
+      if (item) item.quantity += 1;
+      else cart.push({ ...game, quantity: 1 });
+      renderCart();
+    }
+
+    function showGameDetails() {
+      const gameId = Number(new URLSearchParams(location.search).get("juego"));
+      if (!gameId) return;
+      const game = games.find((item) => item.id === gameId);
+      if (!game) return;
+
+      document.getElementById("store").hidden = true;
+      document.getElementById("detail").hidden = false;
+      document.getElementById("detail-category").textContent = game.category;
+      document.getElementById("detail-name").textContent = game.name;
+      document.getElementById("detail-description").textContent = game.description;
+      document.getElementById("detail-price").textContent = `$${game.price.toFixed(2)}`;
+      const detailImage = document.getElementById("detail-image");
+      detailImage.src = `https://cdn.akamai.steamstatic.com/steam/apps/${game.appId}/header.jpg`;
+      detailImage.alt = `Portada de ${game.name}`;
+      document.getElementById("detail-add").dataset.add = game.id;
+      document.title = `${game.name} | Checkpoint`;
+    }
+
+    document.getElementById("search").addEventListener("input", renderProducts);
+
+    document.getElementById("categories").addEventListener("click", (event) => {
+      const button = event.target.closest("[data-category]");
+      if (!button) return;
+      selectedCategory = button.dataset.category;
+      document.querySelectorAll(".category").forEach((category) => {
+        category.classList.toggle("active", category === button);
+      });
+      renderProducts();
+    });
+
+    products.addEventListener("click", (event) => {
+      const button = event.target.closest("[data-add]");
+      if (!button) return;
+      const game = games.find((item) => item.id === Number(button.dataset.add));
+      if (game) addToCart(game);
+    });
+
+    document.getElementById("detail-add").addEventListener("click", (event) => {
+      const game = games.find((item) => item.id === Number(event.currentTarget.dataset.add));
+      if (!game) return;
+      addToCart(game);
+      document.getElementById("detail-message").textContent = `${game.name} se agregó al carrito.`;
+    });
+
+    cartElement.addEventListener("click", (event) => {
+      const button = event.target.closest("[data-remove]");
+      if (!button) return;
+      const index = cart.findIndex((item) => item.id === Number(button.dataset.remove));
+      if (index !== -1) cart.splice(index, 1);
+      renderCart();
+    });
+
+    document.getElementById("cart-toggle").addEventListener("click", (event) => {
+      const isOpen = cartElement.classList.toggle("open");
+      event.currentTarget.setAttribute("aria-expanded", String(isOpen));
+    });
+
+    renderProducts();
+    renderCart();
+    showGameDetails();
+  </script>
+</body>
+</html>
